@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMatchesOfDay } from '@/lib/bolsadeaposta/getMatchesOfDay';
+import { getSingularidades } from '@/lib/bolsadeaposta/getSingularidades';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -17,7 +17,12 @@ export async function GET(request: Request) {
     formattedDate = `${year}${month}${day}`;
   }
 
-  const matches = await getMatchesOfDay(formattedDate, timezoneOffset);
-
-  return NextResponse.json(matches || []);
+  // Expecting a heavy operation (can take ~5-15s based on the Match size)
+  try {
+     const matches = await getSingularidades(formattedDate, timezoneOffset);
+     return NextResponse.json(matches || []);
+  } catch (error) {
+     console.error('API Error processing singularidades:', error);
+     return NextResponse.json({ error: 'Failed to process singularidades' }, { status: 500 });
+  }
 }

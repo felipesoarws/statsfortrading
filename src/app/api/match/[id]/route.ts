@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getMatchDetails } from '@/lib/flashscore/getMatchDetails';
+import { getMatchDetails } from '@/lib/bolsadeaposta/getMatchDetails';
 
 export async function GET(
   request: Request,

@@ -1,4 +1,5 @@
 import { parseFlashscoreFeed } from './parseFlashscoreFeed';
+import { getBolsaOdds } from '../bolsadeaposta/getBolsaOdds';
 
 export interface MatchHistory {
   date: string;
@@ -13,6 +14,8 @@ export interface MatchHistory {
   opponentHTScore: number;
   homeTeamId: number;
   awayTeamId: number;
+  homeLogo?: string;
+  awayLogo?: string;
   teamPenalties?: number;
   opponentPenalties?: number;
 }
@@ -57,6 +60,25 @@ export interface MatchDetails {
     draw: number;
     away: number;
   };
+  homeLogo?: string;
+  awayLogo?: string;
+  status?: string;
+  odds?: {
+    home?: string;
+    draw?: string;
+    away?: string;
+    over25?: string;
+    under25?: string;
+    over15?: string;
+    over05?: string;
+    lay00?: string;
+    lay01?: string;
+  };
+  currentScore?: {
+    home: number;
+    away: number;
+  };
+  statusType?: string;
   statistics?: any[];
   h2hSummary?: {
     homeWins: number;
@@ -67,6 +89,8 @@ export interface MatchDetails {
   homePenalties?: number;
   awayPenalties?: number;
   competitionId?: number;
+  totalVolume?: number;
+  countryName?: string;
 }
 
 export async function getMatchDetails(matchId: string, limit: number = 10, competitionId?: number): Promise<MatchDetails | null> {
@@ -138,6 +162,10 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
     const statsRes = await fetch(statsUrl, { headers, next: { revalidate: 60 } });
     const statistics = statsRes.ok ? (await statsRes.json()).statistics : undefined;
 
+    // 7. Fetch Odds from Bolsa de Aposta (official)
+    const bolsaOdds = await getBolsaOdds(event.homeTeam.name, event.awayTeam.name, event.startTimestamp);
+    const oddsData = bolsaOdds || undefined;
+
     const parseMatches = (events: any[], focusTeamId: number): MatchHistory[] => {
       let filtered = (events || []).filter(e => e.status?.type === 'finished');
       
@@ -170,8 +198,10 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
 
           const date = new Date(e.startTimestamp * 1000);
           
-          let scoreStr = isHome ? `${focusTeamScore} - ${oppTeamScore}` : `${oppTeamScore} - ${focusTeamScore}`;
-          if (focusTeamPen !== undefined && oppTeamPen !== undefined) {
+          let scoreStr = (focusTeamScore !== undefined && oppTeamScore !== undefined)
+            ? (isHome ? `${focusTeamScore} - ${oppTeamScore}` : `${oppTeamScore} - ${focusTeamScore}`)
+            : '-';
+          if (focusTeamPen !== undefined && oppTeamPen !== undefined && scoreStr !== '-') {
              scoreStr += isHome ? ` (${focusTeamPen}-${oppTeamPen})` : ` (${oppTeamPen}-${focusTeamPen})`;
           }
 
@@ -282,6 +312,14 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
        liveTime = event.status.description;
     }
 
+    let currentScore = undefined;
+    if (event.status.type === 'inprogress' || event.status.type === 'finished') {
+       currentScore = {
+          home: event.homeScore?.current ?? 0,
+          away: event.awayScore?.current ?? 0
+       };
+    }
+
     return {
       matchId: String(matchId),
       homeTeam: event.homeTeam.name,
@@ -298,13 +336,15 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
       commonScores,
       probabilities,
       statistics,
+      odds: oddsData,
+      currentScore,
       h2hSummary,
       liveTime,
       homePenalties: event.homeScore?.penalties,
       awayPenalties: event.awayScore?.penalties,
-      competitionId: event.tournament?.uniqueTournament?.id || event.tournament?.id
+      competitionId: event.tournament?.uniqueTournament?.id,
+      statusType: event.status?.type
     };
-
   } catch (error) {
     console.error('Error fetching match details:', error);
     return null;

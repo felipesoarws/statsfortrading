@@ -1,40 +1,60 @@
-import { TeamAnalysis } from "@/lib/flashscore/getMatchDetails";
+import { TeamAnalysis } from "@/lib/bolsadeaposta/getMatchDetails";
 
 interface Props {
   teamName: string;
   analysis: TeamAnalysis;
+  teamLogo?: string;
   isAway?: boolean;
 }
 
-export function TeamAnalysisStrip({ teamName, analysis, isAway }: Props) {
+export function TeamAnalysisStrip({ teamName, analysis, teamLogo, isAway }: Props) {
   const accentColor = isAway ? "text-secondary" : "text-primary";
   const borderColor = isAway ? "border-secondary/30" : "border-primary/30";
 
   return (
-    <div className="flex flex-col gap-px border border-border/10 bg-border/5 rounded-sm overflow-hidden">
-      <div className={`px-3 py-1.5 bg-secondary/40 border-b border-border/10`}>
-        <h3 className={`text-[10px] font-black uppercase tracking-widest text-foreground/80 truncate`}>
+    <div className="flex flex-col gap-px border border-border/10 bg-border/5 rounded-sm overflow-hidden shadow-sm">
+      <div className={`px-2 py-1.5 bg-secondary/40 border-b border-border/10 flex items-center gap-2`}>
+        <div className="w-5 h-5 rounded flex items-center justify-center border border-border/10 shadow-inner bg-card">
+            {teamLogo && <img src={teamLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(teamLogo)}` : teamLogo} className="w-3.5 h-3.5 object-contain" alt="" />}
+        </div>
+        <h3 className={`text-xs font-bold tracking-widest text-foreground truncate`}>
           {teamName}
         </h3>
       </div>
 
-      <div className="grid grid-cols-3 bg-black/20 gap-px">
-        <div className="bg-background/40 p-3 text-center">
-            <div className="text-xl font-black tabular-nums">{analysis.goalsScored}</div>
-            <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight">Marcados</div>
-            <div className={`text-[9px] font-black tabular-nums ${accentColor} mt-1`}>MÉDIA {analysis.avgGoalsScored.toFixed(2)}</div>
+      <div className="grid grid-cols-3 bg-border/20 gap-px">
+        <div className="bg-background/40 p-2 text-center">
+            <div className={`text-xl font-bold tabular-nums tracking-tighter shadow-sm ${
+              analysis.avgGoalsScored >= 1.5 ? 'text-green-600 dark:text-green-500' :
+              analysis.avgGoalsScored >= 1.0 ? 'text-yellow-600 dark:text-yellow-500' :
+              'text-red-600 dark:text-red-500'
+            }`}>{analysis.goalsScored}</div>
+            <div className="text-[10px] font-medium text-muted-foreground mt-0.5">Marcados</div>
+            <div className={`text-[11px] font-semibold tabular-nums mt-1 p-0.5 rounded shadow-inner ${
+              analysis.avgGoalsScored >= 1.5 ? 'bg-green-500/10 text-green-600 dark:text-green-500' :
+              analysis.avgGoalsScored >= 1.0 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500' :
+              'bg-red-500/10 text-red-600 dark:text-red-500'
+            }`}>MÉDIA {analysis.avgGoalsScored.toFixed(2)}</div>
         </div>
 
-        <div className="bg-background/40 p-3 text-center">
-            <div className="text-xl font-black tabular-nums text-red-500">{analysis.goalsConceded}</div>
-            <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight">Sofridos</div>
-            <div className="text-[9px] font-black tabular-nums text-red-500 mt-1">MÉDIA {analysis.avgGoalsConceded.toFixed(2)}</div>
+        <div className="bg-background/40 p-2 text-center">
+            <div className={`text-xl font-bold tabular-nums tracking-tighter shadow-sm ${
+              analysis.avgGoalsConceded <= 1.0 ? 'text-green-600 dark:text-green-500' :
+              analysis.avgGoalsConceded <= 1.5 ? 'text-yellow-600 dark:text-yellow-500' :
+              'text-red-600 dark:text-red-500'
+            }`}>{analysis.goalsConceded}</div>
+            <div className="text-[10px] font-medium text-muted-foreground mt-0.5">Sofridos</div>
+            <div className={`text-[11px] font-semibold tabular-nums mt-1 p-0.5 rounded shadow-inner ${
+              analysis.avgGoalsConceded <= 1.0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' :
+              analysis.avgGoalsConceded <= 1.5 ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500' :
+              'bg-red-500/10 text-red-600 dark:text-red-500'
+            }`}>MÉDIA {analysis.avgGoalsConceded.toFixed(2)}</div>
         </div>
 
-        <div className="bg-background/40 p-3 text-center">
-            <div className="text-xl font-black tabular-nums text-foreground/70">{analysis.totalGoals}</div>
-            <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-tight">Total</div>
-            <div className="text-[9px] font-black tabular-nums text-foreground/40 mt-1">MÉDIA {analysis.avgTotalGoals.toFixed(2)}</div>
+        <div className="bg-background/40 p-2 text-center border-l border-border/10">
+            <div className="text-xl font-bold tabular-nums text-foreground/80 tracking-tighter shadow-sm">{analysis.totalGoals}</div>
+            <div className="text-[10px] font-medium text-muted-foreground mt-0.5">Total</div>
+            <div className="text-[11px] font-semibold tabular-nums text-foreground/60 mt-1 bg-black/5 p-0.5 rounded shadow-inner">MÉDIA {analysis.avgTotalGoals.toFixed(2)}</div>
         </div>
       </div>
     </div>
