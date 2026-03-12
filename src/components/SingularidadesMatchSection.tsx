@@ -44,10 +44,10 @@ export function SingularidadesMatchSection({ homeHistory, awayHistory, homeName,
                 <div className="flex items-center gap-4">
                     <div className="flex -space-x-3">
                         <div className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center p-2 backdrop-blur-md shadow-xl relative z-10 transition-transform group-hover:scale-110">
-                            {homeLogo && <Image src={homeLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(homeLogo)}` : homeLogo} className="w-full h-full object-contain" alt="" width={48} height={48} />}
+                            {homeLogo && <Image src={homeLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(homeLogo)}` : homeLogo} className="w-full h-full object-contain" alt="" width={48} height={48} unoptimized={true} />}
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center p-2 backdrop-blur-md shadow-xl relative z-0 transition-transform group-hover:scale-110">
-                            {awayLogo && <Image src={awayLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(awayLogo)}` : awayLogo} className="w-full h-full object-contain" alt="" width={48} height={48} />}
+                            {awayLogo && <Image src={awayLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(awayLogo)}` : awayLogo} className="w-full h-full object-contain" alt="" width={48} height={48} unoptimized={true} />}
                         </div>
                     </div>
                     <div>

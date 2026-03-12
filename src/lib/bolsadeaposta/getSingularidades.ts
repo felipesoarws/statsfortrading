@@ -80,7 +80,7 @@ export async function getSingularidades(dateYYYYMMDD: string, timezoneOffsetMinu
         }
 
         return { ...match, lay01Odd: lay01Odd?.toFixed(2), isNoZeroZero };
-      } catch (_e) {
+      } catch {
         return null;
       }
     }));

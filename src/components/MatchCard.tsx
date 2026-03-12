@@ -41,6 +41,7 @@ export function MatchCard({ match }: { match: MatchInfo }) {
                   className="w-4 h-4 object-contain opacity-80 shrink-0" 
                   width={16}
                   height={16}
+                  unoptimized={true}
                 />
               )}
             </div>
@@ -82,6 +83,7 @@ export function MatchCard({ match }: { match: MatchInfo }) {
                   className="w-4 h-4 object-contain opacity-80 shrink-0" 
                   width={16}
                   height={16}
+                  unoptimized={true}
                 />
               )}
               <span className={`text-xs truncate ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'font-bold text-foreground' : 'font-medium text-foreground/70'}`}>
