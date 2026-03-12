@@ -10,10 +10,14 @@ export function SafeImg({
   src,
   alt = "",
   className,
+  width = 16,
+  height = 16
 }: {
   src: string;
   alt?: string;
   className?: string;
+  width?: number;
+  height?: number;
 }) {
   if (!src) return null;
   return (
@@ -21,8 +25,8 @@ export function SafeImg({
       src={src}
       alt={alt}
       className={className}
-      width={16}
-      height={16}
+      width={width}
+      height={height}
       unoptimized={true}
       onError={(e) => {
         e.currentTarget.style.display = "none";

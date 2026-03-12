@@ -1,5 +1,5 @@
 import { TeamAnalysis } from "@/lib/bolsadeaposta/getMatchDetails";
-import Image from "next/image";
+import { SafeImg } from "./SafeImg";
 
 interface Props {
   teamName: string;
@@ -14,7 +14,7 @@ export function TeamAnalysisStrip({ teamName, analysis, teamLogo }: Props) {
     <div className="flex flex-col gap-px border border-border/10 bg-border/5 rounded-sm overflow-hidden shadow-sm">
       <div className={`px-2 py-1.5 bg-secondary/40 border-b border-border/10 flex items-center gap-2`}>
         <div className="w-5 h-5 rounded flex items-center justify-center border border-border/10 shadow-inner bg-card">
-            {teamLogo && <Image src={teamLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(teamLogo)}` : teamLogo} className="w-3.5 h-3.5 object-contain" alt="" width={14} height={14} unoptimized={true} />}
+            <SafeImg src={teamLogo || ""} className="w-3.5 h-3.5 object-contain" width={14} height={14} />
         </div>
         <h3 className={`text-xs font-bold tracking-widest text-foreground truncate`}>
           {teamName}

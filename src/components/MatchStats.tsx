@@ -1,10 +1,10 @@
 import { MatchDetails } from "@/lib/bolsadeaposta/getMatchDetails";
 import { Trophy } from "lucide-react";
+import { SafeImg } from "./SafeImg";
 
 export function MatchStats({ details }: { details: MatchDetails }) {
   return (
     <div className="space-y-6 mb-8">
-      {/* Probabilidades da Comunidade */}
       {/* Probabilidades da Comunidade */}
       {details.probabilities && (
         <div className="border border-border/10 bg-secondary/5 rounded-sm overflow-hidden flex flex-col shadow-sm">
@@ -36,13 +36,13 @@ export function MatchStats({ details }: { details: MatchDetails }) {
             </div>
             <div className="flex justify-between mt-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
               <div className="flex items-center gap-2 max-w-[130px]">
-                <img src={details.homeLogo} className="w-3.5 h-3.5" alt="" />
+                <SafeImg src={details.homeLogo || ""} className="w-3.5 h-3.5" width={14} height={14} />
                 <span className="truncate">{details.homeTeam}</span>
               </div>
               <span>EMPATE</span>
               <div className="flex items-center gap-2 max-w-[130px] justify-end">
                 <span className="truncate text-right">{details.awayTeam}</span>
-                <img src={details.awayLogo} className="w-3.5 h-3.5" alt="" />
+                <SafeImg src={details.awayLogo || ""} className="w-3.5 h-3.5" width={14} height={14} />
               </div>
             </div>
           </div>
@@ -61,7 +61,7 @@ export function MatchStats({ details }: { details: MatchDetails }) {
                 <div className="flex-1 text-center">
                     <div className="text-3xl font-black text-primary tracking-tighter shadow-sm">{details.h2hSummary.homeWins}</div>
                     <div className="text-[10px] font-black text-muted-foreground/60 uppercase mt-1 flex items-center justify-center gap-2">
-                         <img src={details.homeLogo} className="w-3 h-3 opacity-60" alt="" />
+                         <SafeImg src={details.homeLogo || ""} className="w-3 h-3 opacity-60" width={12} height={12} />
                          Vitórias
                     </div>
                 </div>
@@ -75,7 +75,7 @@ export function MatchStats({ details }: { details: MatchDetails }) {
                     <div className="text-3xl font-black text-foreground/50 tracking-tighter shadow-sm">{details.h2hSummary.awayWins}</div>
                     <div className="text-[10px] font-black text-muted-foreground/60 uppercase mt-1 flex items-center justify-center gap-2">
                         Vitórias
-                        <img src={details.awayLogo} className="w-3 h-3 opacity-60" alt="" />
+                        <SafeImg src={details.awayLogo || ""} className="w-3 h-3 opacity-60" width={12} height={12} />
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@ export function MatchStats({ details }: { details: MatchDetails }) {
         {/* Team Stats Summary */}
         <div className="border border-border/10 bg-secondary/5 rounded-sm overflow-hidden flex flex-col shadow-sm">
           <div className="bg-secondary/40 px-3 py-1.5 border-b border-border/10 flex items-center gap-2 justify-center">
-            <img src={details.homeLogo} className="w-3 h-3" alt="" />
+            <SafeImg src={details.homeLogo || ""} className="w-3 h-3" width={12} height={12} />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 truncate">MÉDIA {details.homeTeam}</h3>
           </div>
           <div className="p-4 bg-black/10 flex gap-4">
@@ -118,7 +118,7 @@ export function MatchStats({ details }: { details: MatchDetails }) {
 
         <div className="border border-border/10 bg-secondary/5 rounded-sm overflow-hidden flex flex-col shadow-sm">
           <div className="bg-secondary/40 px-3 py-1.5 border-b border-border/10 flex items-center gap-2 justify-center">
-            <img src={details.awayLogo} className="w-3 h-3" alt="" />
+            <SafeImg src={details.awayLogo || ""} className="w-3 h-3" width={12} height={12} />
             <h3 className="text-[10px] font-black uppercase tracking-widest text-foreground/40 truncate">MÉDIA {details.awayTeam}</h3>
           </div>
           <div className="p-4 bg-black/10 flex gap-4">

@@ -1,5 +1,6 @@
 import { MatchInfo } from '../flashscore/getMatchesOfDay';
 import { resolveTeamLogo } from '../sofascore/getTeamLogos';
+import { BolsaRunner, BolsaMarket, ScheduledEvent, InPlayEvent } from './types';
 
 const MEXCHANGE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
@@ -15,29 +16,6 @@ const MEXCHANGE_HEADERS = {
   'sec-fetch-site': 'same-site'
 };
 
-interface ScheduledEvent {
-  id: number | string;
-  name: string;
-  start: string;
-  competitionName?: string;
-  leagueName?: string;
-  'in-running-flag'?: boolean;
-  'meta-tags'?: { type: string; name: string }[];
-  markets?: { runners?: { volume?: string }[] }[];
-}
-
-interface InPlayEvent {
-  eventId: number | string;
-  leagueName?: string;
-  startDate?: string;
-  timeElapsed?: string;
-  home?: { name: string; score: string };
-  away?: { name: string; score: string };
-  score?: {
-    home?: { name: string; score: string };
-    away?: { name: string; score: string };
-  };
-}
 
 const LAYBACK_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
@@ -104,20 +82,20 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
         }
       }
 
-      const mapped: MatchInfo[] = events.map((event: any) => {
-        const date = new Date(event.startDate);
+      const mapped: MatchInfo[] = events.map((event: ScheduledEvent & InPlayEvent & { startDate?: string; homeTeamName?: string; awayTeamName?: string; homeTeamScore?: string; awayTeamScore?: string; eventId?: string | number }) => {
+        const date = new Date(event.startDate || event.start || Date.now());
         const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         return {
-          matchId: event.eventId,
+          matchId: String(event.eventId || event.id),
           league: event.leagueName || 'Encerrado',
           time: timeStr,
-          home: event.homeTeamName || 'Unknown',
-          away: event.awayTeamName || 'Unknown',
+          home: event.homeTeamName || (event.home && typeof event.home === 'object' ? event.home.name : event.home) || event.name?.split(' vs ')[0] || 'Unknown',
+          away: event.awayTeamName || (event.away && typeof event.away === 'object' ? event.away.name : event.away) || event.name?.split(' vs ')[1] || 'Unknown',
           status: 'FINISHED',
-          homeScore: parseInt(event.homeTeamScore || '0'),
-          awayScore: parseInt(event.awayTeamScore || '0'),
-          homeLogo: `https://data-center-bolsa-statistics-api.layback.trade/api/event/${event.eventId}/image?team=home`,
-          awayLogo: `https://data-center-bolsa-statistics-api.layback.trade/api/event/${event.eventId}/image?team=away`,
+          homeScore: parseInt(String(event.homeTeamScore || (event.score && typeof event.score === 'object' && event.score.home ? event.score.home.score : (event.home && typeof event.home === 'object' ? event.home.score : '0')))),
+          awayScore: parseInt(String(event.awayTeamScore || (event.score && typeof event.score === 'object' && event.score.away ? event.score.away.score : (event.away && typeof event.away === 'object' ? event.away.score : '0')))),
+          homeLogo: `https://data-center-bolsa-statistics-api.layback.trade/api/event/${event.eventId || event.id}/image?team=home`,
+          awayLogo: `https://data-center-bolsa-statistics-api.layback.trade/api/event/${event.eventId || event.id}/image?team=away`,
         };
       });
 
@@ -182,9 +160,9 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
 
       let totalVolume = 0;
       if (event.markets && Array.isArray(event.markets)) {
-         event.markets.forEach((m: any) => {
+         event.markets.forEach((m: BolsaMarket) => {
             if (m.runners && Array.isArray(m.runners)) {
-               totalVolume += m.runners.reduce((acc: number, r: any) => acc + (parseFloat(r.volume || '0')), 0);
+               totalVolume += m.runners.reduce((acc: number, r: BolsaRunner) => acc + (parseFloat(String(r.volume || '0'))), 0);
             }
          });
       }

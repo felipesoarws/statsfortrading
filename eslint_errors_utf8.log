@@ -1,0 +1,81 @@
+﻿
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\app\layout.tsx
+   2:10  warning  'Inter' is defined but never used                                                                                                                                @typescript-eslint/no-unused-vars
+  26:9   warning  Custom fonts not added in `pages/_document.js` will only load for a single page. This is discouraged. See: https://nextjs.org/docs/messages/no-page-custom-font  @next/next/no-page-custom-font
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\app\match\[id]\page.tsx
+    4:10  warning  'MatchLiveStats' is defined but never used                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   10:53  warning  'Info' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   10:59  warning  'Activity' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   38:9   warning  'formattedDate' is assigned a value but never used                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   39:9   warning  'formattedTime' is assigned a value but never used                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   73:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  116:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  213:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  222:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  409:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  423:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\components\MatchLiveStats.tsx
+  1:10  warning  'Card' is defined but never used         @typescript-eslint/no-unused-vars
+  1:16  warning  'CardContent' is defined but never used  @typescript-eslint/no-unused-vars
+  2:10  warning  'Progress' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\components\MatchStats.tsx
+   39:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   45:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   64:26  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   78:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   88:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  121:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\components\MatchesList.tsx
+  9:10  warning  'Trophy' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\components\SingularidadesList.tsx
+  11:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\components\SingularidadesMatchSection.tsx
+  15:112  warning  'lay01Odd' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\bolsadeaposta\getMatchDetails.ts
+  192:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  227:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  230:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\bolsadeaposta\getMatchesOfDay.ts
+  107:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  185:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\flashscore\getMatchDetails.ts
+    1:10  warning  'parseFlashscoreFeed' is defined but never used     @typescript-eslint/no-unused-vars
+   84:16  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  171:35  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  277:65  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  278:65  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  304:12  error    'minutes' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\flashscore\getMatchesOfDay.ts
+   62:35  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+   77:20  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+   95:74  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  103:61  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  115:14  error  'minutes' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\flashscore\getTeamForm.ts
+   1:10  warning  'MatchInfo' is defined but never used     @typescript-eslint/no-unused-vars
+   3:69  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:53  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\felipesoarws\Documents\dev\statsfortrading\src\lib\sofascore\getH2H.ts
+  12:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 51 problems (24 errors, 27 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

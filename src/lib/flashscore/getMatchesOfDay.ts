@@ -1,3 +1,5 @@
+import { SofaScoreEvent } from '../sofascore/types';
+
 export interface MatchInfo {
   matchId: string;
   league: string;
@@ -74,7 +76,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
     );
 
     // Combine all events
-    let allEvents: any[] = [];
+    let allEvents: SofaScoreEvent[] = [];
     for (const data of responses) {
       if (data.events && Array.isArray(data.events)) {
         allEvents = allEvents.concat(data.events);
@@ -92,7 +94,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
     }
 
     // Filter to only include events strictly within the local day boundary
-    const filteredEvents = Array.from(eventsMap.values()).filter((event: any) => {
+    const filteredEvents = Array.from(eventsMap.values() as IterableIterator<SofaScoreEvent>).filter((event) => {
       const eventTimeMs = event.startTimestamp * 1000;
       return eventTimeMs >= midnightUtcForLocalMs && eventTimeMs < endOfDayUtcForLocalMs;
     });
@@ -100,7 +102,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
     // Sort by startTimestamp to ensure chronological order
     filteredEvents.sort((a, b) => a.startTimestamp - b.startTimestamp);
 
-    const matches: MatchInfo[] = filteredEvents.map((event: any) => {
+    const matches: MatchInfo[] = filteredEvents.map((event) => {
       const date = new Date(event.startTimestamp * 1000);
       const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       
@@ -109,22 +111,23 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
 
       // Calculate live time if match is in progress
       let liveTime = undefined;
-      if (event.status.type === 'inprogress' && event.time?.currentPeriodStartTimestamp) {
+      const matchStatus = event.status;
+      if (matchStatus && matchStatus.type === 'inprogress' && event.time?.currentPeriodStartTimestamp) {
          const startTs = event.time.currentPeriodStartTimestamp;
          const now = Math.floor(Date.now() / 1000);
-         let minutes = Math.floor((now - startTs) / 60);
+         const minutes = Math.floor((now - startTs) / 60);
          
-         if (event.status.description === '1st half') {
+         if (matchStatus.description === '1st half') {
             liveTime = `${Math.min(minutes, 45)}'`;
-         } else if (event.status.description === '2nd half') {
+         } else if (matchStatus.description === '2nd half') {
             liveTime = `${Math.min(minutes + 45, 90)}'`;
-         } else if (event.status.description === 'Extra time') {
+         } else if (matchStatus.description === 'Extra time') {
             liveTime = `${minutes + 90}'`;
          } else {
-            liveTime = minutes > 0 ? `${minutes}'` : event.status.description;
+            liveTime = minutes > 0 ? `${minutes}'` : matchStatus.description;
          }
-      } else if (event.status.type === 'inprogress') {
-         liveTime = event.status.description;
+      } else if (matchStatus && matchStatus.type === 'inprogress') {
+         liveTime = matchStatus.description;
       }
 
       return {
@@ -133,7 +136,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
         home: event.homeTeam?.name || 'Unknown',
         away: event.awayTeam?.name || 'Unknown',
         time: timeStr,
-        status: event.status?.description || event.status?.type || 'Scheduled',
+        status: matchStatus?.description || matchStatus?.type || 'Scheduled',
         homeScore,
         awayScore,
         homeLogo: event.homeTeam?.id ? `https://api.sofascore.app/api/v1/team/${event.homeTeam.id}/image` : undefined,

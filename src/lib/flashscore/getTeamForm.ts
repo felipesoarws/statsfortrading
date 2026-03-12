@@ -1,6 +1,6 @@
-import { MatchInfo } from "./getMatchesOfDay";
+import { SofaScoreEvent } from "../sofascore/types";
 
-export async function getTeamForm(teamId: string | number): Promise<any[]> {
+export async function getTeamForm(teamId: string | number): Promise<SofaScoreEvent[]> {
   try {
     const res = await fetch(`https://api.sofascore.com/api/v1/team/${teamId}/events/last/0`, {
       headers: {
@@ -24,7 +24,7 @@ export async function getTeamForm(teamId: string | number): Promise<any[]> {
   }
 }
 
-export function checkSingularidadeCondition(events: any[], teamId: string | number, type: 'HOME' | 'AWAY'): boolean {
+export function checkSingularidadeCondition(events: SofaScoreEvent[], teamId: string | number, type: 'HOME' | 'AWAY'): boolean {
   // Get ONLY finished matches that are actually resolved with scores
   const finished = events.filter(e => e.status?.type === 'finished' && e.homeScore?.current !== undefined && e.awayScore?.current !== undefined);
   
@@ -37,8 +37,8 @@ export function checkSingularidadeCondition(events: any[], teamId: string | numb
     
     if (!isTeamHome && !isTeamAway) continue;
 
-    const myScore = isTeamHome ? match.homeScore.current : match.awayScore.current;
-    const oppScore = isTeamHome ? match.awayScore.current : match.homeScore.current;
+    const myScore = isTeamHome ? (match.homeScore?.current || 0) : (match.awayScore?.current || 0);
+    const oppScore = isTeamHome ? (match.awayScore?.current || 0) : (match.homeScore?.current || 0);
 
     if (type === 'HOME') {
       // "O mandante nunca perdeu de 0x1 nos ultimos 30 jogos"

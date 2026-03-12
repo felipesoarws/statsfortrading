@@ -70,10 +70,12 @@ export default async function MatchPage({
                     </div>
                     <div className="order-1 md:order-2 w-16 h-16 relative flex items-center justify-center bg-black/5 dark:bg-white/5 rounded border border-border/10 p-2 group">
                         <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity rounded" />
-                        <img 
-                            src={details.homeLogo} 
+                        <SafeImg 
+                            src={details.homeLogo || ""} 
                             alt={details.homeTeam} 
                             className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform duration-500"
+                            width={64}
+                            height={64}
                         />
                     </div>
                 </div>
@@ -113,10 +115,12 @@ export default async function MatchPage({
                 <div className="flex-1 flex flex-col md:flex-row items-center justify-start gap-4 text-center md:text-left">
                     <div className="w-16 h-16 relative flex items-center justify-center bg-black/5 dark:bg-white/5 rounded border border-border/10 p-2 group">
                         <div className="absolute inset-0 bg-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity rounded" />
-                        <img 
-                            src={details.awayLogo} 
+                        <SafeImg 
+                            src={details.awayLogo || ""} 
                             alt={details.awayTeam} 
                             className="w-full h-full object-contain relative z-10 group-hover:scale-110 transition-transform duration-500"
+                            width={64}
+                            height={64}
                         />
                     </div>
                     <div>
@@ -210,7 +214,7 @@ export default async function MatchPage({
            <div className="flex items-center gap-6">
               <div className="flex flex-col text-right">
                  <span className="text-[10px] font-medium text-muted-foreground/80 flex items-center justify-end gap-1.5">
-                    <img src={(details.homeLogo || '').startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(details.homeLogo || '')}` : (details.homeLogo || '')} className="w-3 h-3" alt="" />
+                    <SafeImg src={details.homeLogo || ""} className="w-3 h-3" width={12} height={12} />
                     Médias - {details.homeTeam}
                  </span>
                  <div className="text-[11px] font-medium mt-1 tabular-nums">
@@ -219,7 +223,7 @@ export default async function MatchPage({
               </div>
               <div className="flex flex-col text-right">
                  <span className="text-[10px] font-medium text-muted-foreground/80 flex items-center justify-end gap-1.5">
-                    <img src={(details.awayLogo || '').startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(details.awayLogo || '')}` : (details.awayLogo || '')} className="w-3 h-3" alt="" />
+                    <SafeImg src={details.awayLogo || ""} className="w-3 h-3" width={12} height={12} />
                     Médias - {details.awayTeam}
                  </span>
                  <div className="text-[11px] font-medium mt-1 tabular-nums">
@@ -386,8 +390,8 @@ export default async function MatchPage({
                  </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <TeamAnalysisStrip teamName={details.homeTeam} teamLogo={details.homeLogo} analysis={details.homeAnalysis} />
-                 <TeamAnalysisStrip teamName={details.awayTeam} teamLogo={details.awayLogo} analysis={details.awayAnalysis} isAway={true} />
+                 <TeamAnalysisStrip teamName={details.homeTeam} teamLogo={details.homeLogo || ""} analysis={details.homeAnalysis} />
+                 <TeamAnalysisStrip teamName={details.awayTeam} teamLogo={details.awayLogo || ""} analysis={details.awayAnalysis} isAway={true} />
               </div>
            </section>
 
@@ -406,7 +410,7 @@ export default async function MatchPage({
                 <div className="bg-muted/5 rounded-3xl p-6 border border-border/10 w-full">
                   <div className="text-sm font-semibold text-primary mb-6 pl-2 flex items-center gap-3">
                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
-                        <img src={details.homeLogo} className="w-5 h-5 object-contain" alt="" />
+                        <SafeImg src={details.homeLogo || ""} className="w-5 h-5 object-contain" width={20} height={20} />
                      </div>
                      {details.homeTeam}
                   </div>
@@ -420,7 +424,7 @@ export default async function MatchPage({
                 <div className="bg-muted/5 rounded-3xl p-6 border border-border/10 w-full">
                    <div className="text-sm font-semibold text-secondary-foreground mb-6 pl-2 flex items-center gap-3">
                      <div className="w-8 h-8 rounded-lg bg-secondary/20 flex items-center justify-center border border-secondary/30 shadow-sm">
-                        <img src={details.awayLogo} className="w-5 h-5 object-contain" alt="" />
+                        <SafeImg src={details.awayLogo || ""} className="w-5 h-5 object-contain" width={20} height={20} />
                      </div>
                      {details.awayTeam}
                    </div>

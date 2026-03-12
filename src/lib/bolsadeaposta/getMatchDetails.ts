@@ -1,6 +1,7 @@
 import { MatchDetails, MatchHistory, TeamAnalysis, MarketStats } from '../flashscore/getMatchDetails';
 import { resolveTeamLogo } from '../sofascore/getTeamLogos';
 import { getSofaScoreH2H } from '../sofascore/getH2H';
+import { BolsaRunner, BolsaMarket, BolsaMatchHistoryItem, BolsaEventInfo } from './types';
 export type { MatchDetails, MatchHistory, TeamAnalysis, MarketStats };
 
 const MEXCHANGE_HEADERS = {
@@ -24,28 +25,6 @@ const LAYBACK_HEADERS = {
   'Referer': 'https://bolsadeaposta.bet.br/'
 };
 
-interface BolsaRunner {
-  name: string;
-  prices?: { side: string, odds: number }[];
-  'last-matched-odds'?: number;
-}
-
-interface BolsaMarket {
-  name: string;
-  runners?: BolsaRunner[];
-}
-
-interface BolsaMatchHistoryItem {
-  home: string;
-  away: string;
-  goalsHome: string | number;
-  goalsAway: string | number;
-  goalsHomeHt?: string | number;
-  goalsAwayHt?: string | number;
-  startDate: string;
-  league?: string;
-  eventId: number | string;
-}
 
 // Simplified fetch without retries or verbose logs
 async function fetchWithRetry(url: string, options: RequestInit & { next?: { revalidate: number } }): Promise<Response> {
@@ -63,18 +42,6 @@ async function safeJson<T>(res: Response, fallback: T): Promise<T> {
   }
 }
 
-interface BolsaEventInfo {
-  homeTeamName: string;
-  awayTeamName: string;
-  startDate: string;
-  leagueName: string;
-  eventStatus: string;
-  homeTeamImage?: string;
-  awayTeamImage?: string;
-  homeInitialOdd?: number;
-  drawInitialOdd?: number;
-  awayInitialOdd?: number;
-}
 
 export async function getMatchDetails(matchId: string, limit: number = 20, competitionId?: number): Promise<MatchDetails | null> {
   try {
@@ -189,8 +156,8 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
     };
 
     await Promise.all([...homeHistoryRaw, ...awayHistoryRaw].map(async (row) => {
-        (row as any).homeLogo = await resolveOpponentLogo(row.homeTeamName);
-        (row as any).awayLogo = await resolveOpponentLogo(row.awayTeamName);
+        row.homeLogo = await resolveOpponentLogo(row.homeTeamName);
+        row.awayLogo = await resolveOpponentLogo(row.awayTeamName);
     }));
 
     const calculateAnalysis = (matches: MatchHistory[]): TeamAnalysis => {
@@ -224,15 +191,15 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
 
     const findOdds = (marketName: string, runnerName: string, side: 'back' | 'lay' = 'back') => {
       // Find all markets of that type, then find the runner that matches
-      const markets = (runnersData || []).filter((m: any) => m.name.toLowerCase().includes(marketName.toLowerCase()));
+      const markets = (runnersData as BolsaMarket[] || []).filter((m) => m.name.toLowerCase().includes(marketName.toLowerCase()));
       
       for (const m of markets) {
-        const runner = m.runners?.find((r: any) => r.name.toLowerCase().includes(runnerName.toLowerCase()));
+        const runner = m.runners?.find((r) => r.name.toLowerCase().includes(runnerName.toLowerCase()));
         if (!runner) continue;
 
-        const prices = runner.prices?.filter((p: any) => p.side === side);
+        const prices = runner.prices?.filter((p) => p.side === side);
         if (prices && prices.length > 0) {
-          const sorted = prices.sort((a: any, b: any) => side === 'back' ? b.odds - a.odds : a.odds - b.odds);
+          const sorted = prices.sort((a, b) => side === 'back' ? b.odds - a.odds : a.odds - b.odds);
           return sorted[0].odds?.toFixed(2);
         }
         

@@ -1,4 +1,4 @@
-import { parseFlashscoreFeed } from './parseFlashscoreFeed';
+import { SofaScoreEvent } from '../sofascore/types';
 // import { getBolsaOdds } from '../bolsadeaposta/getBolsaOdds';
 
 export interface MatchHistory {
@@ -81,7 +81,7 @@ export interface MatchDetails {
     away: number;
   };
   statusType?: string;
-  statistics?: any[];
+  statistics?: { name: string; home: string; away: string; }[];
   h2hSummary?: {
     homeWins: number;
     draws: number;
@@ -168,7 +168,7 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
     // const bolsaOdds = await getBolsaOdds(event.homeTeam.name, event.awayTeam.name, event.startTimestamp);
     const oddsData = undefined;
 
-    const parseMatches = (events: any[], focusTeamId: number): MatchHistory[] => {
+    const parseMatches = (events: SofaScoreEvent[], focusTeamId: number): MatchHistory[] => {
       let filtered = (events || []).filter(e => e.status?.type === 'finished');
       
       if (competitionId) {
@@ -181,7 +181,7 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
       return filtered
         .sort((a, b) => b.startTimestamp - a.startTimestamp)
         .slice(0, limit)
-        .map(e => {
+        .map((e: SofaScoreEvent) => {
           const isHome = e.homeTeam.id === focusTeamId;
           const focusTeamScore = isHome ? e.homeScore?.current : e.awayScore?.current;
           const oppTeamScore = isHome ? e.awayScore?.current : e.homeScore?.current;
@@ -191,11 +191,13 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
           const oppTeamPen = isHome ? e.awayScore?.penalties : e.homeScore?.penalties;
           
           let result: 'V' | 'E' | 'D' = 'E';
-          if (focusTeamScore > oppTeamScore) result = 'V';
-          else if (focusTeamScore < oppTeamScore) result = 'D';
-          else if (focusTeamPen !== undefined && oppTeamPen !== undefined) {
-             if (focusTeamPen > oppTeamPen) result = 'V';
-             else if (focusTeamPen < oppTeamPen) result = 'D';
+          if (focusTeamScore !== undefined && oppTeamScore !== undefined) {
+            if (focusTeamScore > oppTeamScore) result = 'V';
+            else if (focusTeamScore < oppTeamScore) result = 'D';
+            else if (focusTeamPen !== undefined && oppTeamPen !== undefined) {
+               if (focusTeamPen > oppTeamPen) result = 'V';
+               else if (focusTeamPen < oppTeamPen) result = 'D';
+            }
           }
 
           const date = new Date(e.startTimestamp * 1000);
@@ -274,8 +276,8 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
     
     // Fallback: If no direct H2H found, search in home/away recent history for the opponent
     if (h2h.length === 0) {
-      const homeRecent = (homeFormData.events || []).filter((e: any) => e.homeTeam.id === awayTeamId || e.awayTeam.id === awayTeamId);
-      const awayRecent = (awayFormData.events || []).filter((e: any) => e.homeTeam.id === homeTeamId || e.awayTeam.id === homeTeamId);
+      const homeRecent = (homeFormData.events as SofaScoreEvent[] || []).filter((e) => e.homeTeam.id === awayTeamId || e.awayTeam.id === awayTeamId);
+      const awayRecent = (awayFormData.events as SofaScoreEvent[] || []).filter((e) => e.homeTeam.id === homeTeamId || e.awayTeam.id === homeTeamId);
       const combined = [...homeRecent, ...awayRecent];
       // Deduplicate by ID
       const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
