@@ -14,6 +14,8 @@ export interface MatchHistory {
   opponentHTScore: number;
   homeTeamId: number;
   awayTeamId: number;
+  homeTeamName: string;
+  awayTeamName: string;
   homeLogo?: string;
   awayLogo?: string;
   teamPenalties?: number;
@@ -218,6 +220,8 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
             opponentHTScore: oppTeamHT || 0,
             homeTeamId: e.homeTeam.id,
             awayTeamId: e.awayTeam.id,
+            homeTeamName: e.homeTeam.name,
+            awayTeamName: e.awayTeam.name,
             teamPenalties: focusTeamPen,
             opponentPenalties: oppTeamPen
           };

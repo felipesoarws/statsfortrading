@@ -1,5 +1,5 @@
 import { MatchDetails, MatchHistory, TeamAnalysis, MarketStats } from '../flashscore/getMatchDetails';
-import { getSofascoreTeamLogo } from '../sofascore/getTeamLogos';
+import { resolveTeamLogo } from '../sofascore/getTeamLogos';
 import { getSofaScoreH2H } from '../sofascore/getH2H';
 export type { MatchDetails, MatchHistory, TeamAnalysis, MarketStats };
 
@@ -24,20 +24,56 @@ const LAYBACK_HEADERS = {
   'Referer': 'https://bolsadeaposta.bet.br/'
 };
 
+interface BolsaRunner {
+  name: string;
+  prices?: { side: string, odds: number }[];
+  'last-matched-odds'?: number;
+}
+
+interface BolsaMarket {
+  name: string;
+  runners?: BolsaRunner[];
+}
+
+interface BolsaMatchHistoryItem {
+  home: string;
+  away: string;
+  goalsHome: string | number;
+  goalsAway: string | number;
+  goalsHomeHt?: string | number;
+  goalsAwayHt?: string | number;
+  startDate: string;
+  league?: string;
+  eventId: number | string;
+}
+
 // Simplified fetch without retries or verbose logs
-async function fetchWithRetry(url: string, options: RequestInit & { next?: any }): Promise<Response> {
+async function fetchWithRetry(url: string, options: RequestInit & { next?: { revalidate: number } }): Promise<Response> {
   return fetch(url, options);
 }
 
-async function safeJson(res: Response, fallback: any = null) {
+async function safeJson<T>(res: Response, fallback: T): Promise<T> {
   if (!res.ok) return fallback;
   const text = await res.text();
   if (!text || text.trim() === '') return fallback;
   try {
-    return JSON.parse(text);
-  } catch (e) {
+    return JSON.parse(text) as T;
+  } catch {
     return fallback;
   }
+}
+
+interface BolsaEventInfo {
+  homeTeamName: string;
+  awayTeamName: string;
+  startDate: string;
+  leagueName: string;
+  eventStatus: string;
+  homeTeamImage?: string;
+  awayTeamImage?: string;
+  homeInitialOdd?: number;
+  drawInitialOdd?: number;
+  awayInitialOdd?: number;
 }
 
 export async function getMatchDetails(matchId: string, limit: number = 20, competitionId?: number): Promise<MatchDetails | null> {
@@ -45,16 +81,16 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
     // 1. Fetch Event Info (Includes Base64 logos)
     const infoUrl = `https://data-center-bolsa-statistics-api.layback.trade/api/event/${matchId}/info`;
     const infoRes = await fetchWithRetry(infoUrl, { headers: LAYBACK_HEADERS, next: { revalidate: 300 } });
-    let info = await safeJson(infoRes);
+    let info = await safeJson<BolsaEventInfo | null>(infoRes, null);
     
     // Fallback: If info is missing (common for past events), try to recover from history
     if (!info) {
       const fallbackHistUrl = `https://data-center-bolsa-statistics-api.layback.trade/api/event/${matchId}/history?matches=1`;
       const fallbackHistRes = await fetchWithRetry(fallbackHistUrl, { headers: LAYBACK_HEADERS, next: { revalidate: 3600 } });
-      const fallbackHistData = await safeJson(fallbackHistRes);
+      const fallbackHistData = await safeJson<{ matches: { homeTeam: BolsaMatchHistoryItem[], awayTeam: BolsaMatchHistoryItem[] } } | null>(fallbackHistRes, null);
       
       const foundMatch = [...(fallbackHistData?.matches?.homeTeam || []), ...(fallbackHistData?.matches?.awayTeam || [])]
-        .find((m: any) => String(m.eventId) === String(matchId));
+        .find((m) => String(m.eventId) === String(matchId));
       
       if (foundMatch) {
         info = {
@@ -72,46 +108,48 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
       }
     }
 
+    if (!info) return null;
+
     // 2. Fetch History, Score, Runners and SofaScore H2H in parallel
     const historyParams = new URLSearchParams({ matches: String(limit), sameSide: 'true' });
     if (competitionId) historyParams.set('sameLeague', 'true');
     const historyUrl = `https://data-center-bolsa-statistics-api.layback.trade/api/event/${matchId}/history?${historyParams.toString()}`;
     
-    const [historyRes, scoreRes, eventsRes, homeLogoResult, awayLogoResult, sofascoreH2H] = await Promise.all([
+    const [historyRes, scoreRes, eventsRes, homeLogo, awayLogo, sofascoreH2H] = await Promise.all([
       fetchWithRetry(historyUrl, { headers: LAYBACK_HEADERS, next: { revalidate: 600 } }),
       fetchWithRetry(`https://data-center-bolsa-statistics-api.layback.trade/api/event/${matchId}/score`, { headers: LAYBACK_HEADERS, next: { revalidate: 60 } }),
       fetchWithRetry(`https://mexchange-api.bolsadeaposta.bet.br/api/events/${matchId}?popular-count=10`, { headers: MEXCHANGE_HEADERS, next: { revalidate: 300 } }),
-      getSofascoreTeamLogo(info.homeTeamName),
-      getSofascoreTeamLogo(info.awayTeamName),
+      resolveTeamLogo(info.homeTeamName),
+      resolveTeamLogo(info.awayTeamName),
       getSofaScoreH2H(info.homeTeamName, info.awayTeamName),
     ]);
 
-    const historyData = await safeJson(historyRes, { matches: { homeTeam: [], awayTeam: [] } });
-    const scoreResData = await safeJson(scoreRes);
-    const runnersRaw = await safeJson(eventsRes, {});
-    const runnersData: any[] = runnersRaw?.markets || [];
+    const historyData = await safeJson(historyRes, { matches: { homeTeam: [] as BolsaMatchHistoryItem[], awayTeam: [] as BolsaMatchHistoryItem[] } });
+    const scoreResData = await safeJson<{ homeTeamScore?: string, awayTeamScore?: string } | null>(scoreRes, null);
+    const runnersRaw = await safeJson<{ markets?: BolsaMarket[], volume?: number, 'meta-tags'?: { type: string, name: string }[] } | null>(eventsRes, null);
+    const runnersData = runnersRaw?.markets || [];
     const totalVolume = runnersRaw?.volume || 0;
     
     // Extract more info from meta-tags
-    const competitionTag = runnersRaw?.['meta-tags']?.find((t: any) => t.type === 'COMPETITION');
-    const countryTag = runnersRaw?.['meta-tags']?.find((t: any) => t.type === 'COUNTRY');
+    const competitionTag = runnersRaw?.['meta-tags']?.find((t) => t.type === 'COMPETITION');
+    const countryTag = runnersRaw?.['meta-tags']?.find((t) => t.type === 'COUNTRY');
     const leagueName = competitionTag?.name || info.leagueName || 'Competição';
 
     // Base64 fallback for logos
-    const formatLogoBase64 = (base64: string | null) => {
+    const formatLogoBase64 = (base64: string | undefined | null) => {
       if (!base64) return null;
       const cleanBase64 = base64.replace(/^data:image\/png;base64,/, '');
       return `data:image/png;base64,${cleanBase64}`;
     };
 
-    const homeLogo = homeLogoResult?.logo || formatLogoBase64(info.homeTeamImage) || '';
-    const awayLogo = awayLogoResult?.logo || formatLogoBase64(info.awayTeamImage) || '';
+    const homeLogoFinal = homeLogo || formatLogoBase64(info.homeTeamImage) || '';
+    const awayLogoFinal = awayLogo || formatLogoBase64(info.awayTeamImage) || '';
 
     // Mapping helper — sync, logos added afterwards
-    const mapBolsaMatchToHistory = (m: any, focusTeamName: string): MatchHistory => {
+    const mapBolsaMatchToHistory = (m: BolsaMatchHistoryItem, focusTeamName: string): MatchHistory => {
       const isHome = m.home.toLowerCase().includes(focusTeamName.toLowerCase());
-      const teamScore = parseInt(isHome ? m.goalsHome : m.goalsAway);
-      const opponentScore = parseInt(isHome ? m.goalsAway : m.goalsHome);
+      const teamScore = parseInt(String(isHome ? m.goalsHome : m.goalsAway));
+      const opponentScore = parseInt(String(isHome ? m.goalsAway : m.goalsHome));
       
       let result: 'V' | 'E' | 'D' = 'E';
       if (teamScore > opponentScore) result = 'V';
@@ -126,34 +164,33 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
         result,
         teamScore,
         opponentScore,
-        teamHTScore: parseInt(isHome ? (m.goalsHomeHt || 0) : (m.goalsAwayHt || 0)),
-        opponentHTScore: parseInt(isHome ? (m.goalsAwayHt || 0) : (m.goalsHomeHt || 0)),
-        homeTeamId: m.eventId,
-        awayTeamId: m.eventId,
+        teamHTScore: parseInt(String(isHome ? (m.goalsHomeHt || 0) : (m.goalsAwayHt || 0))),
+        opponentHTScore: parseInt(String(isHome ? (m.goalsAwayHt || 0) : (m.goalsHomeHt || 0))),
+        homeTeamId: String(m.eventId) as unknown as number,
+        awayTeamId: String(m.eventId) as unknown as number,
         homeTeamName: m.home,
         awayTeamName: m.away,
-      } as any;
+      } as MatchHistory;
     };
 
-    const homeHistoryRaw = (historyData.matches?.homeTeam || []).map((m: any) => mapBolsaMatchToHistory(m, info.homeTeamName));
-    const awayHistoryRaw = (historyData.matches?.awayTeam || []).map((m: any) => mapBolsaMatchToHistory(m, info.awayTeamName));
+    const homeHistoryRaw = (historyData.matches?.homeTeam || []).map((m) => mapBolsaMatchToHistory(m, info.homeTeamName));
+    const awayHistoryRaw = (historyData.matches?.awayTeam || []).map((m) => mapBolsaMatchToHistory(m, info.awayTeamName));
 
     const logoCache = new Map<string, string>();
-    logoCache.set(info.homeTeamName.toLowerCase(), homeLogo);
-    logoCache.set(info.awayTeamName.toLowerCase(), awayLogo);
+    logoCache.set(info.homeTeamName.toLowerCase(), homeLogoFinal);
+    logoCache.set(info.awayTeamName.toLowerCase(), awayLogoFinal);
 
     const resolveOpponentLogo = async (name: string): Promise<string> => {
       const key = name.toLowerCase();
       if (logoCache.has(key)) return logoCache.get(key)!;
-      const result = await getSofascoreTeamLogo(name);
-      const logo = result?.logo || '';
+      const logo = await resolveTeamLogo(name);
       logoCache.set(key, logo);
       return logo;
     };
 
-    await Promise.all([...homeHistoryRaw, ...awayHistoryRaw].map(async (row: any) => {
-        row.homeLogo = await resolveOpponentLogo(row.homeTeamName);
-        row.awayLogo = await resolveOpponentLogo(row.awayTeamName);
+    await Promise.all([...homeHistoryRaw, ...awayHistoryRaw].map(async (row) => {
+        (row as any).homeLogo = await resolveOpponentLogo(row.homeTeamName);
+        (row as any).awayLogo = await resolveOpponentLogo(row.awayTeamName);
     }));
 
     const calculateAnalysis = (matches: MatchHistory[]): TeamAnalysis => {
@@ -224,7 +261,7 @@ export async function getMatchDetails(matchId: string, limit: number = 20, compe
       commonScores: [],
       statusType: (info.eventStatus === 'INPLAY' || info.eventStatus === 'LIVE') ? 'inprogress' : 
                   (info.eventStatus === 'DONE' || info.eventStatus === 'FINISHED') ? 'finished' : 'scheduled',
-      homeLogo, awayLogo,
+      homeLogo: homeLogoFinal, awayLogo: awayLogoFinal,
       totalVolume,
       currentScore: scoreResData ? { home: parseInt(scoreResData.homeTeamScore || '0'), away: parseInt(scoreResData.awayTeamScore || '0') } : undefined,
       odds: {

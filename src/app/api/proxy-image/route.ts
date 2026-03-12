@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
+      console.error(`[ProxyImage] Failed to fetch image from ${url}: ${response.status}`);
       return new NextResponse('Failed to fetch image', { status: response.status });
     }
 
@@ -25,11 +26,11 @@ export async function GET(request: Request) {
     return new NextResponse(blob, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'public, max-age=86400', // Cache for 24h
       },
     });
   } catch (error) {
-    console.error('Proxy image error:', error);
+    console.error(`[ProxyImage] Error fetching image from ${url}:`, error);
     return new NextResponse('Error fetching image', { status: 500 });
   }
 }

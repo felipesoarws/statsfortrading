@@ -1,5 +1,5 @@
 import { MatchInfo } from '../flashscore/getMatchesOfDay';
-import { getSofascoreTeamLogo } from '../sofascore/getTeamLogos';
+import { resolveTeamLogo } from '../sofascore/getTeamLogos';
 
 const MEXCHANGE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
@@ -15,6 +15,30 @@ const MEXCHANGE_HEADERS = {
   'sec-fetch-site': 'same-site'
 };
 
+interface ScheduledEvent {
+  id: number | string;
+  name: string;
+  start: string;
+  competitionName?: string;
+  leagueName?: string;
+  'in-running-flag'?: boolean;
+  'meta-tags'?: { type: string; name: string }[];
+  markets?: { runners?: { volume?: string }[] }[];
+}
+
+interface InPlayEvent {
+  eventId: number | string;
+  leagueName?: string;
+  startDate?: string;
+  timeElapsed?: string;
+  home?: { name: string; score: string };
+  away?: { name: string; score: string };
+  score?: {
+    home?: { name: string; score: string };
+    away?: { name: string; score: string };
+  };
+}
+
 const LAYBACK_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
   'Accept': 'application/json, text/plain, */*',
@@ -24,19 +48,25 @@ const LAYBACK_HEADERS = {
 
 /** Resolve SofaScore logos for a list of matches in parallel batches to avoid rate limiting */
 async function resolveLogos(matches: MatchInfo[]): Promise<MatchInfo[]> {
-  const BATCH = 5;
+  const BATCH = 8; // Increased batch size for more throughput
   const result = [...matches];
-  for (let i = 0; i < result.length; i += BATCH) {
+  const MAX_LOGOS = 100; // Increased to 100 to cover more games on homepage
+  
+  for (let i = 0; i < Math.min(result.length, MAX_LOGOS); i += BATCH) {
     const batch = result.slice(i, i + BATCH);
     await Promise.all(
       batch.map(async (m, idx) => {
-        const [homeLogo, awayLogo] = await Promise.all([
-          getSofascoreTeamLogo(m.home),
-          getSofascoreTeamLogo(m.away),
-        ]);
-        const realIdx = i + idx;
-        if (homeLogo?.logo) result[realIdx] = { ...result[realIdx], homeLogo: homeLogo.logo };
-        if (awayLogo?.logo) result[realIdx] = { ...result[realIdx], awayLogo: awayLogo.logo };
+        try {
+          const [homeLogo, awayLogo] = await Promise.all([
+            resolveTeamLogo(m.home),
+            resolveTeamLogo(m.away),
+          ]);
+          const realIdx = i + idx;
+          if (homeLogo) result[realIdx] = { ...result[realIdx], homeLogo };
+          if (awayLogo) result[realIdx] = { ...result[realIdx], awayLogo };
+        } catch {
+          // Ignore logo errors, we have fallbacks
+        }
       })
     );
   }
@@ -66,7 +96,9 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
         // Check if elements are leagues or events
         if (pastMatches.length > 0 && pastMatches[0].events) {
           // It's grouped: [{ leagueName, events: [...] }, ...]
-          events = pastMatches.flatMap((group: any) => group.events.map((e: any) => ({ ...e, leagueName: group.leagueName || e.leagueName })));
+          events = pastMatches.flatMap((group: { leagueName: string, events: ScheduledEvent[] }) => 
+            group.events.map((e) => ({ ...e, leagueName: group.leagueName || e.leagueName }))
+          );
         } else {
           events = pastMatches;
         }
@@ -95,21 +127,46 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
     }
 
     // 1. Fetch In-Play Matches
-    const inplayRes = await fetch('https://bolsadeaposta.bet.br/client/api/jumper/feedSports/inplay-info', { headers: LAYBACK_HEADERS, next: { revalidate: 30 } });
-    const inplayData = inplayRes.ok ? await inplayRes.json() : [];
+    let inplayData = [];
+    try {
+      const inplayRes = await fetch('https://bolsadeaposta.bet.br/client/api/jumper/feedSports/inplay-info', { 
+        headers: LAYBACK_HEADERS, 
+        next: { revalidate: 30 },
+        signal: AbortSignal.timeout(5000) 
+      });
+      if (inplayRes.ok) {
+        inplayData = await inplayRes.json();
+      } else {
+        console.warn(`[Bolsa] In-play fetch failed: ${inplayRes.status}`);
+      }
+    } catch (e) {
+      console.error('[Bolsa] In-play fetch error:', e);
+    }
 
     // 2. Fetch Scheduled Matches (MExchange)
-    // We use the exact parameters provided by the user
-    const url = 'https://mexchange-api.bolsadeaposta.bet.br/api/events?offset=0&per-page=100&sort-by=start&sort-direction=asc&sport-ids=15&market-types=correct_score&en-market-names=Correct+Score&markets-limit=30';
-    const scheduledRes = await fetch(url, { headers: MEXCHANGE_HEADERS, next: { revalidate: 60 } });
-    const scheduledData = scheduledRes.ok ? await scheduledRes.json() : { events: [] };
-    const scheduledEvents = scheduledData.events || [];
+    let scheduledEvents = [];
+    try {
+      const url = 'https://mexchange-api.bolsadeaposta.bet.br/api/events?offset=0&per-page=100&sort-by=start&sort-direction=asc&sport-ids=15&market-types=correct_score&en-market-names=Correct+Score&markets-limit=30';
+      const scheduledRes = await fetch(url, { 
+        headers: MEXCHANGE_HEADERS, 
+        next: { revalidate: 60 },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (scheduledRes.ok) {
+        const scheduledData = await scheduledRes.json();
+        scheduledEvents = scheduledData.events || [];
+      } else {
+        console.warn(`[Bolsa] Scheduled fetch failed: ${scheduledRes.status}`);
+      }
+    } catch (e) {
+      console.error('[Bolsa] Scheduled fetch error:', e);
+    }
 
     const matches: MatchInfo[] = [];
 
     // Map scheduled and in-play events from MExchange first (they have league info)
-    const scheduledMap = new Map();
-    scheduledEvents.forEach((event: any) => {
+    const scheduledMap = new Map<string, MatchInfo>();
+    scheduledEvents.forEach((event: ScheduledEvent) => {
       const date = new Date(event.start);
       // Adjust date to local timezone using the offset provided
       const localDate = new Date(date.getTime() - (timezoneOffsetMinutes * 60 * 1000));
@@ -117,7 +174,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
       
       if (eventDateStr !== dateYYYYMMDD) return;
 
-      const leagueTag = event['meta-tags']?.find((t: any) => t.type === 'COMPETITION');
+      const leagueTag = event['meta-tags']?.find((t) => t.type === 'COMPETITION');
       const leagueName = leagueTag?.name || event.competitionName || 'Futebol';
       
       const [home, away] = event.name.split(' vs ');
@@ -147,7 +204,7 @@ export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinute
 
     // Augment with Live Data (scores, elapsed time)
     if (Array.isArray(inplayData)) {
-      inplayData.forEach((liveEvent: any) => {
+      inplayData.forEach((liveEvent: InPlayEvent) => {
         const id = String(liveEvent.eventId);
         const existing = scheduledMap.get(id);
         
