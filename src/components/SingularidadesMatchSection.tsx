@@ -1,5 +1,6 @@
 import { MatchHistory } from "@/lib/bolsadeaposta/getMatchDetails";
 import { Activity, Trophy, Info } from "lucide-react";
+import Image from "next/image";
 
 interface Props {
   homeHistory: MatchHistory[];
@@ -28,22 +29,31 @@ export function SingularidadesMatchSection({ homeHistory, awayHistory, homeName,
     const homeProb = calculateLay01Prob(home20);
     const awayProb = calculateLay01Prob(away20);
 
+    const calculateNo00Prob = (matches: MatchHistory[]) => {
+        if (matches.length === 0) return 0;
+        const count00 = matches.filter(m => m.score === "0 - 0").length;
+        return ((matches.length - count00) / matches.length) * 100;
+    };
+
+    const homeNo00Prob = calculateNo00Prob(home20);
+    const awayNo00Prob = calculateNo00Prob(away20);
+
     return (
         <section className="animate-in fade-in slide-in-from-bottom duration-700 delay-300 xl:col-span-12 mt-12 mb-20 bg-primary/5 rounded-3xl p-8 border border-primary/20">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                     <div className="flex -space-x-3">
                         <div className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center p-2 backdrop-blur-md shadow-xl relative z-10 transition-transform group-hover:scale-110">
-                            {homeLogo && <img src={homeLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(homeLogo)}` : homeLogo} className="w-full h-full object-contain" alt="" />}
+                            {homeLogo && <Image src={homeLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(homeLogo)}` : homeLogo} className="w-full h-full object-contain" alt="" width={48} height={48} />}
                         </div>
                         <div className="w-12 h-12 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center p-2 backdrop-blur-md shadow-xl relative z-0 transition-transform group-hover:scale-110">
-                            {awayLogo && <img src={awayLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(awayLogo)}` : awayLogo} className="w-full h-full object-contain" alt="" />}
+                            {awayLogo && <Image src={awayLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(awayLogo)}` : awayLogo} className="w-full h-full object-contain" alt="" width={48} height={48} />}
                         </div>
                     </div>
                     <div>
-                        <h2 className="text-xl font-black uppercase tracking-tight text-primary">Singularidades Lay 0-1</h2>
+                        <h2 className="text-xl font-black uppercase tracking-tight text-primary">Singularidades Pró-Gols</h2>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
-                            Rentabilidade nos últimos 20 jogos contra o placar exato de 0x1 {lay01Odd && `• ODD ATUAL: ${lay01Odd}`}
+                            Rentabilidade nos últimos 20 jogos (LAY 0-1) e Frequência LAY 0-0
                         </p>
                     </div>
                 </div>
@@ -65,11 +75,31 @@ export function SingularidadesMatchSection({ homeHistory, awayHistory, homeName,
                         </div>
                         <span className="text-sm font-black text-primary">{homeProb.toFixed(1)}%</span>
                     </div>
-                    <div className="h-3 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
-                        <div 
-                            className="h-full bg-linear-to-r from-primary/40 to-primary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--primary),0.3)]"
-                            style={{ width: `${homeProb}%` }}
-                        />
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex items-center justify-between text-[8px] font-bold uppercase text-muted-foreground mb-1">
+                                <span>LAY 0-1 (Success Rate)</span>
+                                <span>{homeProb.toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
+                                <div 
+                                    className="h-full bg-linear-to-r from-primary/40 to-primary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                    style={{ width: `${homeProb}%` }}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-between text-[8px] font-bold uppercase text-muted-foreground mb-1">
+                                <span>Frequência LAY 0-0</span>
+                                <span>{homeNo00Prob.toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
+                                <div 
+                                    className="h-full bg-linear-to-r from-amber-500/40 to-amber-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                                    style={{ width: `${homeNo00Prob}%` }}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                         {home20.map((m, i) => (
@@ -104,11 +134,31 @@ export function SingularidadesMatchSection({ homeHistory, awayHistory, homeName,
                         </div>
                         <span className="text-sm font-black text-secondary">{awayProb.toFixed(1)}%</span>
                     </div>
-                    <div className="h-3 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
-                        <div 
-                            className="h-full bg-linear-to-r from-secondary/40 to-secondary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--secondary),0.3)]"
-                            style={{ width: `${awayProb}%` }}
-                        />
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex items-center justify-between text-[8px] font-bold uppercase text-muted-foreground mb-1">
+                                <span>LAY 0-1 (Success Rate)</span>
+                                <span>{awayProb.toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
+                                <div 
+                                    className="h-full bg-linear-to-r from-secondary/40 to-secondary transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(var(--secondary),0.3)]"
+                                    style={{ width: `${awayProb}%` }}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-between text-[8px] font-bold uppercase text-muted-foreground mb-1">
+                                <span>Frequência LAY 0-0</span>
+                                <span>{awayNo00Prob.toFixed(1)}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5">
+                                <div 
+                                    className="h-full bg-linear-to-r from-amber-500/40 to-amber-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                                    style={{ width: `${awayNo00Prob}%` }}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                         {away20.map((m, i) => (

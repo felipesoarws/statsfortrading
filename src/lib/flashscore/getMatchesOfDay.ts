@@ -16,6 +16,7 @@ export interface MatchInfo {
   liveTime?: string;
   lay01Odd?: string;
   totalVolume?: number;
+  isNoZeroZero?: boolean;
 }
 
 export async function getMatchesOfDay(dateYYYYMMDD: string, timezoneOffsetMinutes: number = 0): Promise<MatchInfo[]> {

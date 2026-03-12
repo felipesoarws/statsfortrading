@@ -24,6 +24,7 @@ export function SingularidadesList() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => getFormattedDate(0));
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<'all' | 'lay01' | 'no00'>('all');
 
   const fetchSingularidades = async (dateStr: string) => {
     try {
@@ -52,9 +53,21 @@ export function SingularidadesList() {
                             match.away.toLowerCase().includes(searchQuery.toLowerCase());
       
       if (!matchesSearch) return false;
+      
+      if (filterType === 'lay01') {
+        // We'll rely on the fact that if it's NOT no00, it MUST be lay01 based on our return condition.
+        // But some might be both.
+        // For now, let's just filter by isNoZeroZero if 'no00' is selected.
+        return true; 
+      }
+      
+      if (filterType === 'no00') {
+        return match.isNoZeroZero === true;
+      }
+
       return true;
     });
-  }, [matches, searchQuery]);
+  }, [matches, searchQuery, filterType]);
 
   // Group by League
   const byLeague = useMemo(() => {
@@ -120,6 +133,27 @@ export function SingularidadesList() {
           </div>
 
           <div className="flex items-center gap-3">
+              <div className="flex bg-black/5 dark:bg-black/20 p-0.5 rounded border border-border/10">
+                <button 
+                  className={`text-[9px] font-black px-3 py-1 rounded transition-colors ${filterType === 'all' ? "bg-secondary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setFilterType('all')}
+                >
+                  TODAS
+                </button>
+                <button 
+                  className={`text-[9px] font-black px-3 py-1 rounded transition-colors ${filterType === 'lay01' ? "bg-secondary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setFilterType('lay01')}
+                >
+                  LAY 0-1
+                </button>
+                <button 
+                  className={`text-[9px] font-black px-3 py-1 rounded transition-colors ${filterType === 'no00' ? "bg-secondary text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setFilterType('no00')}
+                >
+                  LAY 0-0
+                </button>
+              </div>
+              <div className="w-px h-4 bg-border/20 mx-1" />
               <TabsList className="bg-black/5 dark:bg-black/20 border border-border/10 h-7 p-0.5">
                 <TabsTrigger value="league" className="text-[10px] font-black h-6 px-4 rounded data-[state=active]:bg-secondary data-[state=active]:text-primary">
                   LIGAS

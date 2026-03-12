@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MatchInfo } from "@/lib/flashscore/getMatchesOfDay";
+import Image from "next/image";
 
 export function MatchCard({ match }: { match: MatchInfo }) {
   const isFinished = match.status === 'FINISHED' || match.status === 'DONE';
@@ -34,11 +35,12 @@ export function MatchCard({ match }: { match: MatchInfo }) {
                 {match.home}
               </span>
               {match.homeLogo && (
-                <img 
+                <Image 
                   src={match.homeLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(match.homeLogo)}` : match.homeLogo} 
                   alt="" 
                   className="w-4 h-4 object-contain opacity-80 shrink-0" 
-                  loading="lazy" 
+                  width={16}
+                  height={16}
                 />
               )}
             </div>
@@ -74,11 +76,12 @@ export function MatchCard({ match }: { match: MatchInfo }) {
             {/* Away Team */}
             <div className="flex-1 flex items-center justify-start gap-1.5 truncate">
               {match.awayLogo && (
-                <img 
+                <Image 
                   src={match.awayLogo.startsWith('http') ? `/api/proxy-image?url=${encodeURIComponent(match.awayLogo)}` : match.awayLogo} 
                   alt="" 
                   className="w-4 h-4 object-contain opacity-80 shrink-0" 
-                  loading="lazy" 
+                  width={16}
+                  height={16}
                 />
               )}
               <span className={`text-xs truncate ${match.awayScore !== undefined && match.awayScore > (match.homeScore || 0) ? 'font-bold text-foreground' : 'font-medium text-foreground/70'}`}>
@@ -103,6 +106,16 @@ export function MatchCard({ match }: { match: MatchInfo }) {
                       <div className="flex flex-col items-center">
                          <span className="text-[8px] font-black text-primary/60 uppercase leading-none mb-0.5">LAY 0-1</span>
                          <span className="text-[10px] font-black text-primary tabular-nums tracking-tighter">{match.lay01Odd}</span>
+                      </div>
+                   </div>
+                )}
+
+                {/* No 0x0 Badge */}
+                {match.isNoZeroZero && (
+                   <div className="px-2 flex items-center justify-center border-l border-border/5 h-full bg-amber-500/5">
+                      <div className="flex flex-col items-center">
+                         <span className="text-[8px] font-black text-amber-600 dark:text-amber-500 uppercase leading-none">LAY 0-0</span>
+                         <span className="text-[7px] font-bold text-amber-600/60 uppercase leading-none -mt-0.5">(20 J)</span>
                       </div>
                    </div>
                 )}

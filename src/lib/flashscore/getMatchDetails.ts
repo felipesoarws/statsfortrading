@@ -1,5 +1,5 @@
 import { parseFlashscoreFeed } from './parseFlashscoreFeed';
-import { getBolsaOdds } from '../bolsadeaposta/getBolsaOdds';
+// import { getBolsaOdds } from '../bolsadeaposta/getBolsaOdds';
 
 export interface MatchHistory {
   date: string;
@@ -163,8 +163,8 @@ export async function getMatchDetails(matchId: string, limit: number = 10, compe
     const statistics = statsRes.ok ? (await statsRes.json()).statistics : undefined;
 
     // 7. Fetch Odds from Bolsa de Aposta (official)
-    const bolsaOdds = await getBolsaOdds(event.homeTeam.name, event.awayTeam.name, event.startTimestamp);
-    const oddsData = bolsaOdds || undefined;
+    // const bolsaOdds = await getBolsaOdds(event.homeTeam.name, event.awayTeam.name, event.startTimestamp);
+    const oddsData = undefined;
 
     const parseMatches = (events: any[], focusTeamId: number): MatchHistory[] => {
       let filtered = (events || []).filter(e => e.status?.type === 'finished');
